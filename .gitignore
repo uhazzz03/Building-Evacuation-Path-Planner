@@ -1,20 +1,39 @@
-@"
+# OS junk
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+
 # .NET
 bin/
 obj/
 *.user
 *.suo
 *.userprefs
+*.ide/
+*.cache/
+*.db
 
 # CMake
-build/
 CMakeCache.txt
 CMakeFiles/
+cmake-build-*/
+build/
+*.cmake
+Testing/
 
-# Node (UI later)
+# Node (for the UI later)
 node_modules/
-.next/
 dist/
-"@ | Out-File -Encoding utf8 .gitignore
+.next/
+coverage/
 
-"EvacuateX" | Out-File -Encoding utf8 README.md
+# Logs
+*.log
+logs/
+
+# Docker
+*.pid

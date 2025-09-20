@@ -1,0 +1,18 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-native",
+      "type": "shell",
+      "command": "cmake -S backend/NativeInterop/EvacuateX.Native -B backend/NativeInterop/EvacuateX.Native/build -DCMAKE_BUILD_TYPE=Debug && cmake --build backend/NativeInterop/EvacuateX.Native/build --config Debug",
+      "problemMatcher": []
+    },
+    {
+      "label": "build-api",
+      "type": "shell",
+      "command": "dotnet build backend/EvacuateX.Api/EvacuateX.Api.csproj",
+      "dependsOn": ["build-native"],
+      "problemMatcher": "$msCompile"
+    }
+  ]
+}

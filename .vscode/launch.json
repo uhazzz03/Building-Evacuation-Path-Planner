@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET Launch API",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/EvacuateX.Api/bin/Debug/net8.0/EvacuateX.Api.dll",
+      "cwd": "${workspaceFolder}/backend/EvacuateX.Api",
+      "env": {
+        "PATH": "${workspaceFolder}/backend/NativeInterop/EvacuateX.Native/build/Release;${env:PATH}"
+      },
+      "preLaunchTask": "build-api",
+      "console": "integratedTerminal"
+    }
+  ]
+}

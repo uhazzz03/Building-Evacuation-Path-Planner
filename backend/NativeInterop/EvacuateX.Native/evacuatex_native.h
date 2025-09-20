@@ -1,0 +1,12 @@
+#pragma once
+#include <stdint.h>
+
+#ifdef _WIN32
+    #define EXTERN extern "C" __declspec(dllexport)
+#else
+    #define EXTERN extern "C"
+#endif
+
+struct EXPoint { int32_t x; int32_t y; };
+
+EXTERN int32_t ex_find_path_sthub(EXPoint start, EXPoint goal, EXPoint* outPath, int32_t maxPathLen);
