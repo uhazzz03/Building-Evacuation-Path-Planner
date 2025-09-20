@@ -1,0 +1,20 @@
+@"
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userprefs
+
+# CMake
+build/
+CMakeCache.txt
+CMakeFiles/
+
+# Node (UI later)
+node_modules/
+.next/
+dist/
+"@ | Out-File -Encoding utf8 .gitignore
+
+"EvacuateX" | Out-File -Encoding utf8 README.md
