@@ -1,0 +1,20 @@
+using System;
+using System.Runtime.InteropServices;
+
+internal static class Native
+{
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct EXPoint
+    {
+        public int x;
+        public int y;
+    }
+    
+    [DllImport("EvacuateX.Native", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern int ex_find_path_stub(
+        EXPoint start,
+        EXPoint goal,
+        IntPtr outPath,
+        int maxPathLen
+    );
+}
