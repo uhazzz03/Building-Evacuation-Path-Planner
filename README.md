@@ -36,3 +36,32 @@ evacuatex/
 - [Visual Studio Build Tools 2022](https://visualstudio.microsoft.com/downloads/) (Windows) or GCC/Clang (Linux/macOS)
 - [.NET SDK 8](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 - [Node.js](https://nodejs.org/) ≥ 18 (for frontend, later)
+
+## Roadmap
+Pathfinding core (Using C++)  
+- Implement A* with Manhattan heuristic
+- Add support for walls and obstacles  
+
+Web API (C#)
+- Grid based DTOs
+- Input validation
+- Units test  
+
+Frontend (Using React)  
+- Grid editor (canvas)
+- visualization for paths
+- Basic UI simulations  
+
+Persistence 
+- Save/load buildings, plans
+- Database migrations  
+
+Advanced simulation (Considering)  
+- Multi agent routing
+- Hazards and re-planning
+- Metrics and heatmap  
+
+DevOps
+- Docker setup
+- CI/CD pipeline
+- Azure deployment
