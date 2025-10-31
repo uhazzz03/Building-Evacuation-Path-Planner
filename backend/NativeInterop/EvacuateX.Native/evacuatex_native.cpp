@@ -21,3 +21,15 @@ int32_t ex_find_path_stub(EXPoint start, EXPoint goal, EXPoint* outPath, int32_t
 
     return n;
 }
+
+int32_t ex_find_path_grid(const uint8_t*grid, int32_t width, int32_t height, EXPoint start, EXPoint goal, EXPoint* outPath, int32_t maxPathLen)
+{
+    if (!grid || !outPath || maxPathLen <= 0) return 0;
+
+    //Replace with A* here later.
+
+    int32_t count = 0;
+    if (count < maxPathLen) outPath[count++] = start;
+    if (count < maxPathLen) outPath[count++] = goal;
+    return count;
+}
