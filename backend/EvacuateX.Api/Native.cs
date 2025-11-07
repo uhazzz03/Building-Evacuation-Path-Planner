@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 
 internal static class Native
@@ -10,7 +9,7 @@ internal static class Native
         public int y;
     }
 
-    [DllImport("EvacuateX.Native", CallingConvention = CallingConvention.Cdecl)]
+    [DllImport("EvacuateX.Native", EntryPoint = "ex_find_path_stub", CallingConvention = CallingConvention.Cdecl)]
     internal static extern int ex_find_path_stub(
         EXPoint start,
         EXPoint goal,
