@@ -1,6 +1,6 @@
 #include "evacuatex_native.h"
 
-int32_t ex_find_path_stub(EXPoint start, EXPoint goal, EXPoint* outPath, int32_t maxPathLen)
+EXTERN int32_t ex_find_path_stub(EXPoint start, EXPoint goal, EXPoint* outPath, int32_t maxPathLen)
 {
     if (!outPath || maxPathLen <=0)
     {

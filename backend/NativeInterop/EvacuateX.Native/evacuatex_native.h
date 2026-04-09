@@ -4,9 +4,9 @@
 #ifdef _WIN32
     #define EXTERN extern "C" __declspec(dllexport)
 #else
-    #define EXTERN extern "C"
+    #define EXTERN extern "C" __attribute__((visibility("default")))
 #endif
 
 struct EXPoint { int32_t x; int32_t y; };
 
-EXTERN int32_t ex_find_path_sthub(EXPoint start, EXPoint goal, EXPoint* outPath, int32_t maxPathLen);
+EXTERN int32_t ex_find_path_stub(EXPoint start, EXPoint goal, EXPoint* outPath, int32_t maxPathLen);
