@@ -1,3 +1,16 @@
-record PointDto(int x, int y);
-record PathRequest(PointDto start, PointDto goal);
-record PathResponse(PointDto[] path);
+public record PointDto(int x, int y);
+public record PathRequest(PointDto start, PointDto goal);
+public record PathResponse(PointDto[] path);
+
+public record GridPathRequest(
+    int width,
+    int height,
+    int[] cells,
+    PointDto start,
+    PointDto goal
+);
+
+public record GridPathResponse(
+    PointDto[] path,
+    bool found
+);

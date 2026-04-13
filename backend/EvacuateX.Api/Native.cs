@@ -17,4 +17,15 @@ internal static class Native
         IntPtr outPath,
         int maxPathLen
     );
+
+    [DllImport("EvacuateX.Native", CallingConvention = CallingConvention.Cdecl)]
+    internal static extern int ex_find_path_grid(
+        byte[] grid,
+        int width,
+        int height,
+        EXPoint start,
+        EXPoint goal,
+        IntPtr outPath,
+        int maxPathLen
+    );
 }
