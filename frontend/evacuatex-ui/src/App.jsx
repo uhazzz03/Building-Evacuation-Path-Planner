@@ -1,8 +1,8 @@
 import { useState } from "react";
 import "./index.css";
 
-const ROWS = 5;
-const COLS = 5;
+const ROWS = 10;
+const COLS = 10;
 
 function createEmptyGrid() {
   return Array.from({ length: ROWS }, () =>
@@ -16,10 +16,14 @@ function App() {
   const [start, setStart] = useState({ x: 0, y: 0 });
   const [goal, setGoal] = useState({ x: 4, y: 4 });
   const [path, setPath] = useState([]);
+  const [isMouseDown, setIsMouseDown] = useState(false);
 
-  const handleCellClick = (row, col) => {
-    if (mode === "wall"){
-      if ((start.x === col && start.y === row) || (goal.x === col && goal.y === row)){
+  const updateCell = (row, col) => {
+    if (mode === "wall") {
+      if (
+        (start.x === col && start.y === row) ||
+        (goal.x === col && goal.y === row)
+      ) {
         return;
       }
 
@@ -28,8 +32,7 @@ function App() {
       setGrid(newGrid);
     }
 
-    if (mode === "start")
-    {
+    if (mode === "start") {
       if (goal.x === col && goal.y === row) return;
       const newGrid = grid.map((r) => [...r]);
       newGrid[row][col] = 0;
@@ -37,14 +40,47 @@ function App() {
       setStart({ x: col, y: row });
     }
 
-    if (mode === "goal")
-    {
+    if (mode === "goal") {
       if (start.x === col && start.y === row) return;
       const newGrid = grid.map((r) => [...r]);
       newGrid[row][col] = 0;
       setGrid(newGrid);
       setGoal({ x: col, y: row });
     }
+  };
+
+  const animatePath = async (newPath) => {
+    setPath([]);
+
+    for (let i = 0; i < newPath.length; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      setPath((prev) => [...prev, newPath[i]]);
+    }
+  };
+
+  const handleMouseDown = (row, col) => {
+    setIsMouseDown(true);
+    updateCell(row, col);
+  };
+
+  const handleMouseEnter = (row, col) => {
+    if (!isMouseDown) return;
+    if (mode !== "wall") return;
+
+    if (
+      (start.x === col && start.y === row) ||
+      (goal.x === col && goal.y === row)
+    ) {
+      return;
+    }
+
+    const newGrid = grid.map((r) => [...r]);
+    newGrid[row][col] = 1;
+    setGrid(newGrid);
+  };
+
+  const handleMouseUp = () => {
+    setIsMouseDown(false);
   };
 
   const flattenGrid = () => {
@@ -70,7 +106,7 @@ function App() {
         throw new Error("API request failed");
       }
       const data = await response.json();
-      setPath(data.path || []);
+      animatePath(data.path || []);
     } 
     catch (error) {
       console.error("Error finding path:", error);
@@ -95,7 +131,7 @@ function App() {
 
   //UI
   return (
-    <div className="app">
+    <div className="app" onMouseUp={handleMouseUp}>
       <h1>EvacuateX Path Planner</h1>
       <div className="controls">
         <button onClick={() => setMode("wall")}>Wall Mode</button>
@@ -131,7 +167,9 @@ function App() {
               <div
                 key={`${rowIndex}-${colIndex}`}
                 className={className}
-                onClick={() => handleCellClick(rowIndex, colIndex)}
+                onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+                onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                onMouseUp={handleMouseUp}
               />
             );
           })
