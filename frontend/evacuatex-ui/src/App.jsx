@@ -1,8 +1,8 @@
 import { useState } from "react";
 import "./index.css";
 
-const ROWS = 10;
-const COLS = 10;
+const ROWS = 8;
+const COLS = 8;
 
 function createEmptyGrid() {
   return Array.from({ length: ROWS }, () =>
