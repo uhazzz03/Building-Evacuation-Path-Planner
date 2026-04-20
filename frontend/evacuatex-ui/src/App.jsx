@@ -1,8 +1,10 @@
 import { useState } from "react";
 import "./index.css";
+import blueprintImage from "./assets/FloorPlan1.jpg";
 
-const ROWS = 8;
-const COLS = 8;
+const ROWS = 20;
+const COLS = 20;
+const CELL_SIZE = 50;
 
 function createEmptyGrid() {
   return Array.from({ length: ROWS }, () =>
@@ -17,6 +19,10 @@ function App() {
   const [goal, setGoal] = useState({ x: 4, y: 4 });
   const [path, setPath] = useState([]);
   const [isMouseDown, setIsMouseDown] = useState(false);
+  const [blueprintOpacity, setBlueprintOpacity] = useState(0.55);
+  const [blueprintScale, setBlueprintScale] = useState(1);
+  const [blueprintOffsetX, setBlueprintOffsetX] = useState(0);
+  const [blueprintOffsetY, setBlueprintOffsetY] = useState(0);
 
   const updateCell = (row, col) => {
     if (mode === "wall") {
@@ -141,39 +147,114 @@ function App() {
         <button onClick={clearPath}>Clear Path</button>
         <button onClick={resetGrid}>Reset Grid</button>
       </div>
+
+      <div className="slider-group">
+        <label htmlFor="opacityRange">
+          Blueprint Opacity: {blueprintOpacity.toFixed(2)}
+        </label>
+        <input
+          id="opacityRange"
+          type="range"
+          min="0.1"
+          max="1"
+          step="0.05"
+          value={blueprintOpacity}
+          onChange={(e) => setBlueprintOpacity(Number(e.target.value))}
+        />
+      </div>
+
+      <div className="slider-group">
+        <label htmlFor="scaleRange">
+          Blueprint Scale: {blueprintScale.toFixed(2)}
+        </label>
+        <input
+          id="scaleRange"
+          type="range"
+          min="0.5"
+          max="2.5"
+          step="0.05"
+          value={blueprintScale}
+          onChange={(e) => setBlueprintScale(Number(e.target.value))}
+        />
+      </div>
+
+      <div className="slider-group">
+        <label htmlFor="offsetXRange">
+          Offset X: {blueprintOffsetX}px
+        </label>
+        <input
+          id="offsetXRange"
+          type="range"
+          min="-300"
+          max="300"
+          step="5"
+          value={blueprintOffsetX}
+          onChange={(e) => setBlueprintOffsetX(Number(e.target.value))}
+        />
+      </div>
+
+      <div className="slider-group">
+        <label htmlFor="offsetYRange">
+          Offset Y: {blueprintOffsetY}px
+        </label>
+        <input
+          id="offsetYRange"
+          type="range"
+          min="-300"
+          max="300"
+          step="5"
+          value={blueprintOffsetY}
+          onChange={(e) => setBlueprintOffsetY(Number(e.target.value))}
+        />
+      </div>
+
       <p>
         Current mode: <strong>{mode}</strong>
       </p>
       <div
-        className="grid"
+        className="grid-wrapper"
         style={{
-          gridTemplateColumns: `repeat(${COLS}, 50px)`
+          width: `${COLS * CELL_SIZE}px`,
+          height: `${ROWS * CELL_SIZE}px`
         }}
       >
-        {grid.map((row, rowIndex) =>
-          row.map((cell, colIndex) => {
-            let className = "cell";
-            if (cell === 1) className += " wall";
-            if (start.x === colIndex && start.y === rowIndex) className += " start";
-            if (goal.x === colIndex && goal.y === rowIndex) className += " goal";
-            if (
-              isPathCell(rowIndex, colIndex) &&
-              !(start.x === colIndex && start.y === rowIndex) &&
-              !(goal.x === colIndex && goal.y === rowIndex)
-            ) {
-              className += " path";
-            }
-            return (
-              <div
-                key={`${rowIndex}-${colIndex}`}
-                className={className}
-                onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
-                onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
-                onMouseUp={handleMouseUp}
-              />
-            );
-          })
-        )}
+        <img
+          src={blueprintImage}
+          alt="Blueprint background"
+          className="blueprint-image"
+          style={{ opacity: blueprintOpacity, transform: `translate(${blueprintOffsetX}px, ${blueprintOffsetY}px) scale(${blueprintScale})`}}
+        />
+        <div
+          className="grid overlay-grid"
+          style={{
+            gridTemplateColumns: `repeat(${COLS}, ${CELL_SIZE}px)`
+          }}
+        >
+          {grid.map((row, rowIndex) =>
+            row.map((cell, colIndex) => {
+              let className = "cell";
+              if (cell === 1) className += " wall";
+              if (start.x === colIndex && start.y === rowIndex) className += " start";
+              if (goal.x === colIndex && goal.y === rowIndex) className += " goal";
+              if (
+                isPathCell(rowIndex, colIndex) &&
+                !(start.x === colIndex && start.y === rowIndex) &&
+                !(goal.x === colIndex && goal.y === rowIndex)
+              ) {
+                className += " path";
+              }
+              return (
+                <div
+                  key={`${rowIndex}-${colIndex}`}
+                  className={className}
+                  onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
+                  onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
+                  onMouseUp={handleMouseUp}
+                />
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );
