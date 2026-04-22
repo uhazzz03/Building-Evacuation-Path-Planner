@@ -35,6 +35,7 @@ EXTERN int32_t ex_find_path_grid(
     int32_t maxPathLen)
 {
     if (!grid || !outPath || maxPathLen <=0) return 0;
+    if (width <=0 || height <= 0) return 0;
 
     auto index = [width](int x, int y)
     {
@@ -48,8 +49,12 @@ EXTERN int32_t ex_find_path_grid(
 
     auto heuristic = [](int x1, int y1, int x2, int y2)
     {
-        return abs(x1 - x2) + abs(y1-y2);
+        return std::abs(x1 - x2) + std::abs(y1-y2);
     };
+
+    if (!inBounds(start.x, start.y) || !inBounds(goal.x, goal.y)) return 0;
+    if (grid[index(start.x, start.y)] != 0) return 0;
+    if (grid[index(goal.x, goal.y)] != 0) return 0;
 
     struct Node
     {
@@ -58,53 +63,57 @@ EXTERN int32_t ex_find_path_grid(
 
     struct Compare
     {
-        bool operator()(const Node& a, const Node& b)
+        bool operator()(const Node& a, const Node& b) const
         {
             return a.f > b.f;
         }
     };
 
-    std::priority_queue<Node, std::vector<Node>, Compare> open;
-    std::vector<int> gScore(width*height, INT_MAX);
-    std::vector<int> cameFrom(width * height, -1);
-    std::vector<bool> closed(width*height, false);
+    std::priority_queue<Node, std::vector<Node>, Compare> openSet;
+    const int totalCells = width * height;
+    const int INF = std::numeric_limits<int>::max();
+    std::vector<int> gScore(totalCells, INF);
+    std::vector<int> cameFrom(totalCells, -1);
+    std::vector<bool> closed(totalCells, false);
 
     int startIdx = index(start.x, start.y);
     int goalIdx = index(goal.x, goal.y);
 
     gScore[startIdx] = 0;
-    open.push({start.x, start.y, 0, heuristic(start.x, start.y, goal.x, goal.y)});
+    openSet.push({start.x, start.y, 0, heuristic(start.x, start.y, goal.x, goal.y)});
 
-    int dx[4] = {1,-1,0,0};
-    int dy[4] = {0,0,1,-1};
+    const int dx[4] = {1,-1,0,0};
+    const int dy[4] = {0,0,1,-1};
 
-    while (!open.empty())
+    while (!openSet.empty())
     {
-        auto current = open.top();
-        open.pop();
+        Node current = openSet.top();
+        openSet.pop();
 
         int cx = current.x;
         int cy = current.y;
         int cidx = index(cx, cy);
 
+        if (closed[cidx]) continue;
+        closed[cidx] = true;
+
         if (cidx == goalIdx)
         {
-            int count = 0;
-            int cur = goalIdx;
-            
-            while (cur != -1 && count < maxPathLen)
-            {
-                int x = cur % width;
-                int y = cur /width;
-                outPath[count++] = {x,y};
-                cur = cameFrom[cur];
+            std::vector<EXPoint> reversedPath;
+            int trace = goalIdx;
+            while (trace != -1) {
+                int x = trace % width;
+                int y = trace / width;
+                reversedPath.push_back({ x, y });
+                trace = cameFrom[trace];
             }
-
-            //reverse path
-            for (int i = 0; i < count / 2; i++) {
-                std::swap(outPath[i], outPath[count - i - 1]);
+            std::reverse(reversedPath.begin(), reversedPath.end());
+            int32_t count = static_cast<int32_t>(
+                std::min(static_cast<int>(reversedPath.size()), maxPathLen)
+            );
+            for (int32_t i = 0; i < count; i++) {
+                outPath[i] = reversedPath[i];
             }
-
             return count;
         }
 
@@ -114,7 +123,8 @@ EXTERN int32_t ex_find_path_grid(
             int ny = cy + dy[i];
 
             if (!inBounds(nx, ny)) continue;
-            if (grid[index(nx, ny)] == 1) continue;
+            if (grid[index(nx, ny)] != 0) continue;
+            if (closed[index(nx, ny)]) continue;
 
             int nidx = index(nx, ny);
             int tentative_g = gScore[cidx] + 1;
@@ -124,7 +134,7 @@ EXTERN int32_t ex_find_path_grid(
                 gScore[nidx] = tentative_g;
 
                 int f = tentative_g + heuristic(nx, ny, goal.x, goal.y);
-                open.push({nx, ny, tentative_g, f});
+                openSet.push({nx, ny, tentative_g, f});
             }
         }
     }
