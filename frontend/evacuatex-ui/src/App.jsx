@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./index.css";
 import blueprintImage from "./assets/FloorPlan1.jpg";
 
@@ -23,8 +23,23 @@ function App() {
   const [blueprintScale, setBlueprintScale] = useState(2.15);
   const [blueprintOffsetX, setBlueprintOffsetX] = useState(-15);
   const [blueprintOffsetY, setBlueprintOffsetY] = useState(-150);
+  const [editEnabled, setEditEnabled] = useState(true);
+
+  // Load settings
+  useEffect(() => {
+    const saved = localStorage.getItem("savedBlueprintAlignment");
+    if (saved) {
+      const s = JSON.parse(saved);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setBlueprintScale(s.scale);
+      setBlueprintOffsetX(s.offsetX);
+      setBlueprintOffsetY(s.offsetY);
+      setBlueprintOpacity(s.opacity);
+    }
+  }, []);
 
   const updateCell = (row, col) => {
+    if (!editEnabled) return;
     if (mode === "wall") {
       if (
         (start.x === col && start.y === row) ||
@@ -53,6 +68,32 @@ function App() {
       setGrid(newGrid);
       setGoal({ x: col, y: row });
     }
+  };
+
+  const saveAlignment = () => {
+    localStorage.setItem(
+      "savedBlueprintAlignment",
+      JSON.stringify({
+        scale: blueprintScale,
+        offsetX: blueprintOffsetX,
+        offsetY: blueprintOffsetY,
+        opacity: blueprintOpacity
+      })
+    );
+    alert("Alignment saved.");
+  };
+
+  const loadAlignment = () => {
+    const saved = localStorage.getItem("savedBlueprintAlignment");
+    if (!saved) {
+      alert("No saved alignment found.");
+      return;
+    }
+    const s = JSON.parse(saved);
+    setBlueprintScale(s.scale);
+    setBlueprintOffsetX(s.offsetX);
+    setBlueprintOffsetY(s.offsetY);
+    setBlueprintOpacity(s.opacity);
   };
 
   const animatePath = async (newPath) => {
@@ -143,8 +184,13 @@ function App() {
         <button onClick={() => setMode("wall")}>Wall Mode</button>
         <button onClick={() => setMode("start")}>Set Start</button>
         <button onClick={() => setMode("goal")}>Set Goal</button>
+        <button onClick={saveAlignment}>Save Alignment</button>
+        <button onClick={loadAlignment}>Load Alignment</button>
         <button onClick={findPath}>Find Path</button>
         <button onClick={clearPath}>Clear Path</button>
+        <button onClick={() => setEditEnabled(!editEnabled)}>
+          {editEnabled ? "Lock Grid" : "Unlock Grid"}
+        </button>
         <button onClick={resetGrid}>Reset Grid</button>
       </div>
 
