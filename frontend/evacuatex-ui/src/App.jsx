@@ -19,10 +19,10 @@ function App() {
   const [goal, setGoal] = useState({ x: 4, y: 4 });
   const [path, setPath] = useState([]);
   const [isMouseDown, setIsMouseDown] = useState(false);
-  const [blueprintOpacity, setBlueprintOpacity] = useState(0.55);
-  const [blueprintScale, setBlueprintScale] = useState(1);
-  const [blueprintOffsetX, setBlueprintOffsetX] = useState(0);
-  const [blueprintOffsetY, setBlueprintOffsetY] = useState(0);
+  const [blueprintOpacity, setBlueprintOpacity] = useState(1.0);
+  const [blueprintScale, setBlueprintScale] = useState(2.15);
+  const [blueprintOffsetX, setBlueprintOffsetX] = useState(-15);
+  const [blueprintOffsetY, setBlueprintOffsetY] = useState(-150);
 
   const updateCell = (row, col) => {
     if (mode === "wall") {
