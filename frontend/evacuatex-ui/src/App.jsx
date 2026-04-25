@@ -16,7 +16,7 @@ function App() {
   const [grid, setGrid] = useState(createEmptyGrid());
   const [mode, setMode] = useState("wall");
   const [start, setStart] = useState({ x: 0, y: 0 });
-  const [goal, setGoal] = useState({ x: 4, y: 4 });
+  const [goals, setGoals] = useState([{ x: 4, y: 4 }]);
   const [path, setPath] = useState([]);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [blueprintOpacity, setBlueprintOpacity] = useState(1.0);
@@ -43,7 +43,7 @@ function App() {
     if (mode === "wall") {
       if (
         (start.x === col && start.y === row) ||
-        (goal.x === col && goal.y === row)
+        (goals.some((g) => g.x === col && g.y === row))
       ) {
         return;
       }
@@ -54,7 +54,7 @@ function App() {
     }
 
     if (mode === "start") {
-      if (goal.x === col && goal.y === row) return;
+      if (goals.some((g) => g.x === col && g.y === row)) return;
       const newGrid = grid.map((r) => [...r]);
       newGrid[row][col] = 0;
       setGrid(newGrid);
@@ -63,10 +63,16 @@ function App() {
 
     if (mode === "goal") {
       if (start.x === col && start.y === row) return;
-      const newGrid = grid.map((r) => [...r]);
-      newGrid[row][col] = 0;
-      setGrid(newGrid);
-      setGoal({ x: col, y: row });
+
+      const alreadyGoal = goals.some((g) => g.x === col && g.y === row);
+      if (alreadyGoal) {
+        setGoals(goals.filter((g) => !(g.x === col && g.y === row)));
+      } else {
+        const newGrid = grid.map((r) => [...r]);
+        newGrid[row][col] = 0;
+        setGrid(newGrid);
+        setGoals([...goals, { x: col, y: row }]);
+      }
     }
   };
 
@@ -116,7 +122,7 @@ function App() {
 
     if (
       (start.x === col && start.y === row) ||
-      (goal.x === col && goal.y === row)
+      (goals.some((g) => g.x === col && g.y === row))
     ) {
       return;
     }
@@ -136,7 +142,7 @@ function App() {
 
   const findPath = async () => {
     try {
-      const response = await fetch("http://localhost:5105/api/path/grid", {
+      const response = await fetch("http://localhost:5105/api/path/multi-goal", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -146,7 +152,7 @@ function App() {
           height: ROWS,
           cells: flattenGrid(),
           start,
-          goal
+          goals
         })
       });
       if (!response.ok) {
@@ -168,7 +174,7 @@ function App() {
   const resetGrid = () => {
     setGrid(createEmptyGrid());
     setStart({ x: 0, y: 0 });
-    setGoal({ x: 4, y: 4 });
+    setGoals([{ x: 4, y: 4 }]);
     setPath([]);
   };
 
@@ -183,7 +189,7 @@ function App() {
       <div className="controls">
         <button onClick={() => setMode("wall")}>Wall Mode</button>
         <button onClick={() => setMode("start")}>Set Start</button>
-        <button onClick={() => setMode("goal")}>Set Goal</button>
+        <button onClick={() => setMode("goal")}>Toggle Exit</button>
         <button onClick={saveAlignment}>Save Alignment</button>
         <button onClick={loadAlignment}>Load Alignment</button>
         <button onClick={findPath}>Find Path</button>
@@ -281,11 +287,11 @@ function App() {
               let className = "cell";
               if (cell === 1) className += " wall";
               if (start.x === colIndex && start.y === rowIndex) className += " start";
-              if (goal.x === colIndex && goal.y === rowIndex) className += " goal";
+              if (goals.some((g) => g.x === colIndex && g.y === rowIndex)) className += " goal";
               if (
                 isPathCell(rowIndex, colIndex) &&
                 !(start.x === colIndex && start.y === rowIndex) &&
-                !(goal.x === colIndex && goal.y === rowIndex)
+                !goals.some((g) => g.x === colIndex && g.y === rowIndex)
               ) {
                 className += " path";
               }

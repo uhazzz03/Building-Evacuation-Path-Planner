@@ -14,3 +14,16 @@ public record GridPathResponse(
     PointDto[] path,
     bool found
 );
+
+public record MultiGoalPathRequest(
+    int width,
+    int height,
+    int[] cells,
+    PointDto start,
+    PointDto[] goals
+);
+
+public record MultiGoalPathResponse(
+    PointDto[] path,
+    bool found
+);

@@ -3,7 +3,11 @@
 #include <queue>
 #include <limits>
 
-EXTERN int32_t ex_find_path_stub(EXPoint start, EXPoint goal, EXPoint* outPath, int32_t maxPathLen)
+EXTERN int32_t ex_find_path_stub(
+    EXPoint start, 
+    EXPoint goal, 
+    EXPoint* outPath, 
+    int32_t maxPathLen)
 {
     if (!outPath || maxPathLen <=0)
     {
@@ -140,4 +144,142 @@ EXTERN int32_t ex_find_path_grid(
     }
 
     return 0; //if there is no path accordingly.
+}
+
+EXTERN int32_t ex_find_path_multi_goal(
+    const uint8_t* grid,
+    int32_t width,
+    int32_t height,
+    EXPoint start,
+    const EXPoint* goals,
+    int32_t goalCount,
+    EXPoint* outPath,
+    int32_t maxPathLen)
+{
+    if (!grid || !goals || !outPath || maxPathLen <= 0) return 0;
+    if (width <= 0 || height <= 0 || goalCount <= 0) return 0;
+
+    auto inBounds = [width, height](int x, int y){
+        return x>=0 && y>=0 && x<width && y<height;
+    };
+
+    auto index = [width](int x, int y){
+        return y * width +x;
+    };
+
+    auto heuristicToClosestGoal = [goals, goalCount](int x, int y) {
+        int best = std::numeric_limits<int>::max();
+        for (int i = 0; i < goalCount; i++) {
+            int dist = std::abs(x - goals[i].x) + std::abs(y - goals[i].y);
+            if (dist < best) best = dist;
+        }
+        return best;
+    };
+
+    if (!inBounds(start.x, start.y)) return 0;
+    if (grid[index(start.x, start.y)] != 0) return 0;
+
+    std::vector<bool> validGoal(width * height, false);
+    int validGoalCount = 0;
+
+    for (int i = 0; i<goalCount; i++){
+        if (!inBounds(goals[i].x, goals[i].y)) continue;
+        int gi = index(goals[i].x, goals[i].y);
+        if (grid[gi] != 0) continue;
+        if (!validGoal[gi])
+        {
+            validGoal[gi] = true;
+            validGoalCount++;
+        }
+    }
+    if (validGoalCount == 0)
+    {
+        return 0;
+    }
+
+    struct Node{int x; int y; int g; int f;};
+
+    struct Compare{
+        bool operator()(const Node& a, const Node& b) const {
+            return a.f > b.f;
+        }
+    };
+
+    std::priority_queue<Node, std::vector<Node>, Compare> openSet;
+
+    const int totalCells = width * height;
+    const int INF = std::numeric_limits<int>::max();
+    std::vector<int> gScore(totalCells, INF);
+    std::vector<int> cameFrom(totalCells, -1);
+    std::vector<bool> closed(totalCells, false);
+
+    int startIdx = index(start.x, start.y);
+    gScore[startIdx] = 0;
+    openSet.push({start.x, start.y, 0, heuristicToClosestGoal(start.x, start.y)});
+
+    const int dx[4] = {1, -1, 0, 0};
+    const int dy[4] = {0, 0, 1, -1};
+
+    while (!openSet.empty())
+    {
+        Node current = openSet.top();
+        openSet.pop();
+
+        int currentIdx = index(current.x, current.y);
+        if (closed[currentIdx])
+        {
+            continue;
+        }
+        closed[currentIdx] = true;
+
+        if (validGoal[currentIdx])
+        {
+            std::vector<EXPoint> reveresedPath;
+            int trace = currentIdx;
+
+            while (trace !=-1)
+            {
+                int x = trace % width;
+                int y = trace /width;
+                reveresedPath.push_back({x, y});
+                trace = cameFrom[trace];
+            }
+
+            std::reverse(reveresedPath.begin(), reveresedPath.end());
+            int32_t count = static_cast<int32_t>(
+                std::min(static_cast<int>(reveresedPath.size()), maxPathLen)
+            );
+
+            for (int32_t i = 0; i<count; i++)
+            {
+                outPath[i] = reveresedPath[i];
+            }
+
+            return count;
+        }
+
+        for (int dir = 0; dir <4; dir++)
+        {
+            int nx = current.x + dx[dir];
+            int ny = current.y + dy[dir];
+
+            if (!inBounds(nx, ny)) continue;
+            int neighborIdx = index(nx, ny);
+
+            if (grid[neighborIdx] != 0) continue;
+            if (closed[neighborIdx]) continue;
+
+            int tentativeG = gScore[currentIdx] + 1;
+
+            if (tentativeG < gScore[neighborIdx])
+            {
+                cameFrom[neighborIdx] = currentIdx;
+                gScore[neighborIdx] = tentativeG;
+
+                int f = tentativeG + heuristicToClosestGoal(nx, ny);
+                openSet.push({ nx, ny , tentativeG, f});
+            }
+        }
+    }
+    return 0;
 }
