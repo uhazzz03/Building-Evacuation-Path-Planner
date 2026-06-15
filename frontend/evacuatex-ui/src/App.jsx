@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import "./index.css";
 // Removed blueprint import for adapatability into any blueprint.
 
-const ROWS = 20;
-const COLS = 20;
-const CELL_SIZE = 50;
+const ROWS = 80;
+const COLS = 60;
+const CELL_SIZE = 12;
 
 function createEmptyGrid() {
   return Array.from({ length: ROWS }, () =>
@@ -349,7 +349,8 @@ function App() {
         <div
           className="grid overlay-grid"
           style={{
-            gridTemplateColumns: `repeat(${COLS}, ${CELL_SIZE}px)`
+            gridTemplateColumns: `repeat(${COLS}, ${CELL_SIZE}px)`,
+            gridTemplateRows: `repeat(${ROWS}, ${CELL_SIZE}px)`
           }}
         >
           {grid.map((row, rowIndex) =>
@@ -369,6 +370,10 @@ function App() {
                 <div
                   key={`${rowIndex}-${colIndex}`}
                   className={className}
+                  style ={{
+                    width: `${CELL_SIZE}px`,
+                    height: `${CELL_SIZE}px`
+                  }}
                   onMouseDown={() => handleMouseDown(rowIndex, colIndex)}
                   onMouseEnter={() => handleMouseEnter(rowIndex, colIndex)}
                   onMouseUp={handleMouseUp}
