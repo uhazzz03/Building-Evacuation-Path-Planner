@@ -17,6 +17,20 @@ body {
   margin-bottom: 20px;
 }
 
+.upload-button {
+  padding: 10px 14px;
+  border: none;
+  background: #222;
+  color: white;
+  cursor: pointer;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.upload-button:hover {
+  opacity: 0.9;
+}
+
 button {
   padding: 10px 14px;
   border: none;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "./index.css";
-import blueprintImage from "./assets/FloorPlan1.jpg";
+// Removed blueprint import for adapatability into any blueprint.
 
 const ROWS = 20;
 const COLS = 20;
@@ -24,6 +24,7 @@ function App() {
   const [blueprintOffsetX, setBlueprintOffsetX] = useState(-15);
   const [blueprintOffsetY, setBlueprintOffsetY] = useState(-150);
   const [editEnabled, setEditEnabled] = useState(true);
+  const [blueprintImage, setBlueprintImage] = useState(null);
 
   // Load settings
   useEffect(() => {
@@ -87,6 +88,22 @@ function App() {
       })
     );
     alert("Alignment saved.");
+  };
+
+  const handleBlueprintUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setBlueprintImage(reader.result);
+      setGrid(createEmptyGrid());
+      setStart({ x: 0, y: 0 });
+      setGoals([{ x: 4, y: 4 }]);
+      setPath([]);
+    };
+    reader.readAsDataURL(file);
   };
 
   const loadAlignment = () => {
@@ -182,6 +199,43 @@ function App() {
     return path.some((p) => p.x === col && p.y === row);
   };
 
+  const saveBlueprintSetup = () => {
+    const setup = {
+      blueprintImage,
+      grid,
+      start,
+      goals,
+      blueprintOpacity,
+      blueprintScale,
+      blueprintOffsetX,
+      blueprintOffsetY
+    };
+
+    localStorage.setItem("evacuatexBlueprintSetup", JSON.stringify(setup));
+    alert("Blueprint setup saved.");
+  };
+
+  const loadBlueprintSetup = () => {
+    const saved = localStorage.getItem("evacuatexBlueprintSetup");
+
+    if (!saved) {
+      alert("No saved blueprint setup found.");
+      return;
+    }
+
+    const setup = JSON.parse(saved);
+
+    setBlueprintImage(setup.blueprintImage);
+    setGrid(setup.grid);
+    setStart(setup.start);
+    setGoals(setup.goals);
+    setBlueprintOpacity(setup.blueprintOpacity);
+    setBlueprintScale(setup.blueprintScale);
+    setBlueprintOffsetX(setup.blueprintOffsetX);
+    setBlueprintOffsetY(setup.blueprintOffsetY);
+    setPath([]);
+  };
+
   //UI
   return (
     <div className="app" onMouseUp={handleMouseUp}>
@@ -198,6 +252,17 @@ function App() {
           {editEnabled ? "Lock Grid" : "Unlock Grid"}
         </button>
         <button onClick={resetGrid}>Reset Grid</button>
+        <label className="upload-button">
+          Upload Blueprint
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleBlueprintUpload}
+            hidden
+          />
+        </label>
+        <button onClick={saveBlueprintSetup}>Save Blueprint Setup</button>
+        <button onClick={loadBlueprintSetup}>Load Blueprint Setup</button>
       </div>
 
       <div className="slider-group">
@@ -270,12 +335,17 @@ function App() {
           height: `${ROWS * CELL_SIZE}px`
         }}
       >
-        <img
-          src={blueprintImage}
-          alt="Blueprint background"
-          className="blueprint-image"
-          style={{ opacity: blueprintOpacity, transform: `translate(${blueprintOffsetX}px, ${blueprintOffsetY}px) scale(${blueprintScale})`}}
-        />
+        {blueprintImage && (
+          <img
+            src={blueprintImage}
+            alt="Blueprint background"
+            className="blueprint-image"
+            style={{
+              opacity: blueprintOpacity,
+              transform: `translate(${blueprintOffsetX}px, ${blueprintOffsetY}px) scale(${blueprintScale})`
+            }}
+          />
+        )}
         <div
           className="grid overlay-grid"
           style={{
