@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./index.css";
+import { detectWalls } from "./utils/wallDetection";
 // Removed blueprint import for adapatability into any blueprint.
 
 const ROWS = 80;
@@ -25,6 +26,12 @@ function App() {
   const [blueprintOffsetY, setBlueprintOffsetY] = useState(-150);
   const [editEnabled, setEditEnabled] = useState(true);
   const [blueprintImage, setBlueprintImage] = useState(null);
+  const blueprintImgRef = useRef(null);
+  const [previewWalls, setPreviewWalls] = useState(null);
+  const [isDetecting, setIsDetecting] = useState(false);
+  const [sensitivity, setSensitivity] = useState(15);
+  const [wallRatioPercent, setWallRatioPercent] = useState(25);
+  const [noiseFilterPercent, setNoiseFilterPercent] = useState(30);
 
   // Load settings
   useEffect(() => {
@@ -117,6 +124,57 @@ function App() {
     setBlueprintOffsetX(s.offsetX);
     setBlueprintOffsetY(s.offsetY);
     setBlueprintOpacity(s.opacity);
+  };
+
+  const handleDetectWalls = () => {
+    if (!blueprintImage || !blueprintImgRef.current || !blueprintImgRef.current.complete) {
+      alert("Upload and align a blueprint before detecting walls.");
+      return;
+    }
+    setIsDetecting(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        try {
+          const candidate = detectWalls({
+            image: blueprintImgRef.current,
+            rows: ROWS,
+            cols: COLS,
+            cellSize: CELL_SIZE,
+            scale: blueprintScale,
+            offsetX: blueprintOffsetX,
+            offsetY: blueprintOffsetY,
+            sensitivity,
+            wallRatio: wallRatioPercent / 100,
+            noiseFilterPercent
+          });
+          setPreviewWalls(candidate);
+        } catch (error) {
+          console.error("Wall detection failed:", error);
+          alert("Wall detection failed.");
+        } finally {
+          setIsDetecting(false);
+        }
+      });
+    });
+  };
+
+  const acceptPreview = () => {
+    if (!previewWalls) return;
+    const newGrid = grid.map((r) => [...r]);
+    for (let row = 0; row < ROWS; row++) {
+      for (let col = 0; col < COLS; col++) {
+        if (previewWalls[row][col] !== 1) continue;
+        if (start.x === col && start.y === row) continue;
+        if (goals.some((g) => g.x === col && g.y === row)) continue;
+        newGrid[row][col] = 1;
+      }
+    }
+    setGrid(newGrid);
+    setPreviewWalls(null);
+  };
+
+  const discardPreview = () => {
+    setPreviewWalls(null);
   };
 
   const animatePath = async (newPath) => {
@@ -261,6 +319,15 @@ function App() {
             hidden
           />
         </label>
+        <button onClick={handleDetectWalls} disabled={!blueprintImage || isDetecting}>
+          {isDetecting ? "Detecting…" : "Detect Walls"}
+        </button>
+        {previewWalls && (
+          <>
+            <button onClick={acceptPreview}>Accept Detected Walls</button>
+            <button onClick={discardPreview}>Discard Preview</button>
+          </>
+        )}
         <button onClick={saveBlueprintSetup}>Save Blueprint Setup</button>
         <button onClick={loadBlueprintSetup}>Load Blueprint Setup</button>
       </div>
@@ -325,6 +392,51 @@ function App() {
         />
       </div>
 
+      <div className="slider-group">
+        <label htmlFor="sensitivityRange">
+          Sensitivity: {sensitivity}
+        </label>
+        <input
+          id="sensitivityRange"
+          type="range"
+          min="0"
+          max="60"
+          step="1"
+          value={sensitivity}
+          onChange={(e) => setSensitivity(Number(e.target.value))}
+        />
+      </div>
+
+      <div className="slider-group">
+        <label htmlFor="wallRatioRange">
+          Wall Ratio: {wallRatioPercent}%
+        </label>
+        <input
+          id="wallRatioRange"
+          type="range"
+          min="5"
+          max="90"
+          step="5"
+          value={wallRatioPercent}
+          onChange={(e) => setWallRatioPercent(Number(e.target.value))}
+        />
+      </div>
+
+      <div className="slider-group">
+        <label htmlFor="noiseFilterRange">
+          Noise Filter: {noiseFilterPercent}%
+        </label>
+        <input
+          id="noiseFilterRange"
+          type="range"
+          min="0"
+          max="100"
+          step="5"
+          value={noiseFilterPercent}
+          onChange={(e) => setNoiseFilterPercent(Number(e.target.value))}
+        />
+      </div>
+
       <p>
         Current mode: <strong>{mode}</strong>
       </p>
@@ -337,6 +449,7 @@ function App() {
       >
         {blueprintImage && (
           <img
+            ref={blueprintImgRef}
             src={blueprintImage}
             alt="Blueprint background"
             className="blueprint-image"
@@ -357,6 +470,15 @@ function App() {
             row.map((cell, colIndex) => {
               let className = "cell";
               if (cell === 1) className += " wall";
+              if (
+                cell !== 1 &&
+                previewWalls &&
+                previewWalls[rowIndex][colIndex] === 1 &&
+                !(start.x === colIndex && start.y === rowIndex) &&
+                !goals.some((g) => g.x === colIndex && g.y === rowIndex)
+              ) {
+                className += " preview-wall";
+              }
               if (start.x === colIndex && start.y === rowIndex) className += " start";
               if (goals.some((g) => g.x === colIndex && g.y === rowIndex)) className += " goal";
               if (
