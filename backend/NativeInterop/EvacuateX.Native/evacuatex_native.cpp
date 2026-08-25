@@ -3,6 +3,34 @@
 #include <queue>
 #include <limits>
 
+// Cell types. Values 0/1 (open/wall) are the original binary grid; 2/3
+// (door/corridor) are traversable but cost more/less than plain open space.
+constexpr uint8_t CELL_OPEN = 0;
+constexpr uint8_t CELL_WALL = 1;
+constexpr uint8_t CELL_DOOR = 2;
+constexpr uint8_t CELL_CORRIDOR = 3;
+
+// Integer cost scale (avoids floating point in the A* cost/heuristic math).
+constexpr int32_t COST_OPEN = 10;
+constexpr int32_t COST_CORRIDOR = 8;  // cheaper: bias toward marked egress routes
+constexpr int32_t COST_DOOR = 14;     // costlier: bottleneck/funnelling penalty
+constexpr int32_t MIN_STEP_COST = COST_CORRIDOR; // cheapest traversable cost
+
+inline bool isBlocked(uint8_t cellType)
+{
+    return cellType == CELL_WALL;
+}
+
+inline int32_t costOf(uint8_t cellType)
+{
+    switch (cellType)
+    {
+        case CELL_DOOR: return COST_DOOR;
+        case CELL_CORRIDOR: return COST_CORRIDOR;
+        default: return COST_OPEN;
+    }
+}
+
 EXTERN int32_t ex_find_path_stub(
     EXPoint start, 
     EXPoint goal, 
@@ -53,12 +81,12 @@ EXTERN int32_t ex_find_path_grid(
 
     auto heuristic = [](int x1, int y1, int x2, int y2)
     {
-        return std::abs(x1 - x2) + std::abs(y1-y2);
+        return (std::abs(x1 - x2) + std::abs(y1-y2)) * MIN_STEP_COST;
     };
 
     if (!inBounds(start.x, start.y) || !inBounds(goal.x, goal.y)) return 0;
-    if (grid[index(start.x, start.y)] != 0) return 0;
-    if (grid[index(goal.x, goal.y)] != 0) return 0;
+    if (isBlocked(grid[index(start.x, start.y)])) return 0;
+    if (isBlocked(grid[index(goal.x, goal.y)])) return 0;
 
     struct Node
     {
@@ -127,11 +155,11 @@ EXTERN int32_t ex_find_path_grid(
             int ny = cy + dy[i];
 
             if (!inBounds(nx, ny)) continue;
-            if (grid[index(nx, ny)] != 0) continue;
+            if (isBlocked(grid[index(nx, ny)])) continue;
             if (closed[index(nx, ny)]) continue;
 
             int nidx = index(nx, ny);
-            int tentative_g = gScore[cidx] + 1;
+            int tentative_g = gScore[cidx] + costOf(grid[nidx]);
 
             if (tentative_g < gScore[nidx]) {
                 cameFrom[nidx] = cidx;
@@ -173,11 +201,11 @@ EXTERN int32_t ex_find_path_multi_goal(
             int dist = std::abs(x - goals[i].x) + std::abs(y - goals[i].y);
             if (dist < best) best = dist;
         }
-        return best;
+        return best * MIN_STEP_COST;
     };
 
     if (!inBounds(start.x, start.y)) return 0;
-    if (grid[index(start.x, start.y)] != 0) return 0;
+    if (isBlocked(grid[index(start.x, start.y)])) return 0;
 
     std::vector<bool> validGoal(width * height, false);
     int validGoalCount = 0;
@@ -185,7 +213,7 @@ EXTERN int32_t ex_find_path_multi_goal(
     for (int i = 0; i<goalCount; i++){
         if (!inBounds(goals[i].x, goals[i].y)) continue;
         int gi = index(goals[i].x, goals[i].y);
-        if (grid[gi] != 0) continue;
+        if (isBlocked(grid[gi])) continue;
         if (!validGoal[gi])
         {
             validGoal[gi] = true;
@@ -266,10 +294,10 @@ EXTERN int32_t ex_find_path_multi_goal(
             if (!inBounds(nx, ny)) continue;
             int neighborIdx = index(nx, ny);
 
-            if (grid[neighborIdx] != 0) continue;
+            if (isBlocked(grid[neighborIdx])) continue;
             if (closed[neighborIdx]) continue;
 
-            int tentativeG = gScore[currentIdx] + 1;
+            int tentativeG = gScore[currentIdx] + costOf(grid[neighborIdx]);
 
             if (tentativeG < gScore[neighborIdx])
             {

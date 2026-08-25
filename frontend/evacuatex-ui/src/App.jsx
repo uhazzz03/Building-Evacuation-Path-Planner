@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import "./index.css";
 import { detectWalls } from "./utils/wallDetection";
+import { CELL_OPEN, CELL_WALL, CELL_DOOR, CELL_CORRIDOR } from "./utils/cellTypes";
 // Removed blueprint import for adapatability into any blueprint.
 
 const ROWS = 80;
@@ -57,7 +58,33 @@ function App() {
       }
 
       const newGrid = grid.map((r) => [...r]);
-      newGrid[row][col] = newGrid[row][col] === 1 ? 0 : 1;
+      newGrid[row][col] = newGrid[row][col] === CELL_WALL ? CELL_OPEN : CELL_WALL;
+      setGrid(newGrid);
+    }
+
+    if (mode === "door") {
+      if (
+        (start.x === col && start.y === row) ||
+        (goals.some((g) => g.x === col && g.y === row))
+      ) {
+        return;
+      }
+
+      const newGrid = grid.map((r) => [...r]);
+      newGrid[row][col] = newGrid[row][col] === CELL_DOOR ? CELL_OPEN : CELL_DOOR;
+      setGrid(newGrid);
+    }
+
+    if (mode === "corridor") {
+      if (
+        (start.x === col && start.y === row) ||
+        (goals.some((g) => g.x === col && g.y === row))
+      ) {
+        return;
+      }
+
+      const newGrid = grid.map((r) => [...r]);
+      newGrid[row][col] = newGrid[row][col] === CELL_CORRIDOR ? CELL_OPEN : CELL_CORRIDOR;
       setGrid(newGrid);
     }
 
@@ -166,7 +193,8 @@ function App() {
         if (previewWalls[row][col] !== 1) continue;
         if (start.x === col && start.y === row) continue;
         if (goals.some((g) => g.x === col && g.y === row)) continue;
-        newGrid[row][col] = 1;
+        if (grid[row][col] === CELL_DOOR || grid[row][col] === CELL_CORRIDOR) continue;
+        newGrid[row][col] = CELL_WALL;
       }
     }
     setGrid(newGrid);
@@ -193,7 +221,7 @@ function App() {
 
   const handleMouseEnter = (row, col) => {
     if (!isMouseDown) return;
-    if (mode !== "wall") return;
+    if (mode !== "wall" && mode !== "door" && mode !== "corridor") return;
 
     if (
       (start.x === col && start.y === row) ||
@@ -202,8 +230,11 @@ function App() {
       return;
     }
 
+    const paintValue =
+      mode === "wall" ? CELL_WALL : mode === "door" ? CELL_DOOR : CELL_CORRIDOR;
+
     const newGrid = grid.map((r) => [...r]);
-    newGrid[row][col] = 1;
+    newGrid[row][col] = paintValue;
     setGrid(newGrid);
   };
 
@@ -300,6 +331,8 @@ function App() {
       <h1>EvacuateX Path Planner</h1>
       <div className="controls">
         <button onClick={() => setMode("wall")}>Wall Mode</button>
+        <button onClick={() => setMode("door")}>Door Mode</button>
+        <button onClick={() => setMode("corridor")}>Corridor Mode</button>
         <button onClick={() => setMode("start")}>Set Start</button>
         <button onClick={() => setMode("goal")}>Toggle Exit</button>
         <button onClick={saveAlignment}>Save Alignment</button>
@@ -469,9 +502,11 @@ function App() {
           {grid.map((row, rowIndex) =>
             row.map((cell, colIndex) => {
               let className = "cell";
-              if (cell === 1) className += " wall";
+              if (cell === CELL_WALL) className += " wall";
+              else if (cell === CELL_DOOR) className += " door";
+              else if (cell === CELL_CORRIDOR) className += " corridor";
               if (
-                cell !== 1 &&
+                cell === CELL_OPEN &&
                 previewWalls &&
                 previewWalls[rowIndex][colIndex] === 1 &&
                 !(start.x === colIndex && start.y === rowIndex) &&
