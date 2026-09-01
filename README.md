@@ -76,7 +76,7 @@ Clone repo from github accordingly.
 
 ### 4. Navigate to
 - http://localhost:5173
-<img src ="image1ß.png">
+<img src ="image1.png">
 
 
 ## 💉 Testing Backend API
