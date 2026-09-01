@@ -28,6 +28,13 @@ Developed this project as a result of applying algorithm concepts and to underst
 - Click and drag wall drawing
 - Animated path visualization
 - Real-time API integration
+- Multiple exit selection with shortest-reachable-exit routing
+- Blueprint upload and floor-plan overlay (opacity, scale, X/Y alignment)
+- Save/Load blueprint alignment and full blueprint setup (local storage)
+- Grid locking to prevent accidental edits
+- Automatic wall detection from the blueprint (adjustable sensitivity, wall ratio, and noise filtering, with a preview step before applying)
+- Door and Corridor cell types with weighted A* pathfinding costs
+- Higher-resolution 80x60 grid for finer wall tracing
 
 ## 📂 Folder structure (Present)
 
@@ -86,6 +93,11 @@ Using Terminal
   -H "Content-Type: application/json" \
   -d '{"width":5,"height":5,"cells":[0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"start":{"x":0,"y":0},"goal":{"x":4,"y":4}}'
 
+#### Multi-Goal Path (Multiple Exits)
+- curl -X POST http://localhost:5105/api/path/multi-goal \
+  -H "Content-Type: application/json" \
+  -d '{"width":5,"height":5,"cells":[0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"start":{"x":0,"y":0},"goals":[{"x":4,"y":4},{"x":0,"y":4}]}'
+
 ## 🔄 How It Works
 
 - The frontend captures user input (grid, start, goal)
@@ -107,9 +119,6 @@ Using Terminal
 
 ## 🚧 Future Improvements (In-development)
 
-- Blueprint / floorplan import
-- Wall and door detection from real layouts
-- Multiple exit routing
 - Hazard-aware pathfinding
 - Performance optimizations for large maps
 - Algorithm comparisons (Tbd)
